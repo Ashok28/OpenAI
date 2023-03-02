@@ -12,6 +12,22 @@ import Foundation
 @available(tvOS 13.0, *)
 @available(watchOS 6.0, *)
 public extension OpenAI {
+    func chatCompletions(
+        query: ChatQuery,
+        timeoutInterval: TimeInterval = 60.0
+    ) async throws -> ChatCompletion {
+        try await withCheckedThrowingContinuation { continuation in
+            chatCompletions(query: query, timeoutInterval: timeoutInterval) { result in
+                switch result {
+                case let .success(success):
+                    return continuation.resume(returning: success)
+                case let .failure(failure):
+                    return continuation.resume(throwing: failure)
+                }
+            }
+        }
+    }
+
     func completions(
         query: CompletionsQuery,
         timeoutInterval: TimeInterval = 60.0

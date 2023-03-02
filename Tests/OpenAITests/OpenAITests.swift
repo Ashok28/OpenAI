@@ -13,6 +13,12 @@ final class OpenAITests: XCTestCase {
         self.openAI = OpenAI(apiToken: "<YOUR TOKEN HERE>")
     }
 
+    func testChatAsync() async throws {
+        let query = OpenAI.ChatQuery(model: .chatGPT, messages: [.init(role: .user, content: "What is 69?")], temperature: 0, max_tokens: 100, top_p: 1, frequency_penalty: 0, presence_penalty: 0, stop: ["\\n"])
+        let result = try await openAI.chatCompletions(query: query)
+        XCTAssertFalse(result.choices.isEmpty)
+    }
+
     func testCompletionsAsync() async throws {
         let query = OpenAI.CompletionsQuery(model: .textDavinci_003, prompt: "What is 42?", temperature: 0, max_tokens: 100, top_p: 1, frequency_penalty: 0, presence_penalty: 0, stop: ["\\n"])
         let result = try await openAI.completions(query: query)

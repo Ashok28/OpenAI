@@ -9,6 +9,8 @@ import Foundation
 
 public typealias Model = String
 public extension Model {
+    static let chatGPT = "gpt-3.5-turbo"
+    static let chatGPT_0301 = "gpt-3.5-turbo-0301"
     static let textDavinci_003 = "text-davinci-003"
     static let textDavinci_002 = "text-davinci-002"
     static let textDavinci_001 = "text-davinci-001"

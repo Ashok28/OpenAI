@@ -25,7 +25,97 @@ final public class OpenAI {
     }
 }
 
-///MARK: - Completions
+// MARK: - Chat GPT Completions
+public extension OpenAI {
+
+    struct ChatQuery: Codable {
+        public typealias ChatMessages = [ChatMessage]
+
+        /// ID of the chat model to use.
+        public let model: Model
+        /// The prompt(s) to generate completions for.
+        public let messages: ChatMessages
+        /// What sampling temperature to use. Higher values means the model will take more risks. Try 0.9 for more creative applications, and 0 (argmax sampling) for ones with a well-defined answer.
+        public let temperature: Double?
+        /// The maximum number of tokens to generate in the completion.
+        public let max_tokens: Int?
+        /// An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+        public let top_p: Double?
+        /// Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+        public let frequency_penalty: Double?
+        /// Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+        public let presence_penalty: Double?
+        /// Up to 4 sequences where the API will stop generating further tokens. The returned text will not contain the stop sequence.
+        public let stop: [String]?
+        /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.
+        public let user: String?
+
+        public init(model: Model, messages: OpenAI.ChatQuery.ChatMessages, temperature: Double? = nil, max_tokens: Int? = nil, top_p: Double? = nil, frequency_penalty: Double? = nil, presence_penalty: Double? = nil, stop: [String]? = nil, user: String? = nil) {
+            self.model = model
+            self.messages = messages
+            self.temperature = temperature
+            self.max_tokens = max_tokens
+            self.top_p = top_p
+            self.frequency_penalty = frequency_penalty
+            self.presence_penalty = presence_penalty
+            self.stop = stop
+            self.user = user
+        }
+    }
+
+    struct ChatMessage: Codable {
+        public let role: Role
+        public let content: String
+
+        public enum Role: String, Codable {
+            case system, user, assistant
+        }
+
+        public init(role: OpenAI.ChatMessage.Role, content: String) {
+            self.role = role
+            self.content = content
+        }
+    }
+
+    struct ChatCompletion: Codable {
+        public let id: String
+        public let object: String
+        public let created: Int
+        public let choices: [Choice]
+        public let usage: Usage
+
+        public struct Choice: Codable {
+            public let index: Int
+            public let message: ChatMessage
+            public let finishReason: String
+
+            enum CodingKeys: String, CodingKey {
+                case index
+                case message
+                case finishReason = "finish_reason"
+            }
+        }
+
+        public struct Usage: Codable {
+            public let promptTokens: Int
+            public let completionTokens: Int
+            public let totalTokens: Int
+
+            enum CodingKeys: String, CodingKey {
+                case promptTokens = "prompt_tokens"
+                case completionTokens = "completion_tokens"
+                case totalTokens = "total_tokens"
+            }
+        }
+    }
+
+
+    func chatCompletions(query: ChatQuery, timeoutInterval: TimeInterval = 60.0, completion: @escaping (Result<ChatCompletion, Error>) -> Void) {
+        performRequest(request: Request<ChatCompletion>(body: query, url: .chat, timeoutInterval: timeoutInterval), completion: completion)
+    }
+}
+
+// MARK: - Completions
 public extension OpenAI {
 
     struct CompletionsQuery: Codable {
@@ -79,7 +169,7 @@ public extension OpenAI {
     }
 }
 
-///MARK: - Images
+// MARK: - Images
 public extension OpenAI {
 
     struct ImagesQuery: Codable {
@@ -110,7 +200,7 @@ public extension OpenAI {
     }
 }
 
-///MARK: - Embeddings
+//MARK: - Embeddings
 public extension OpenAI {
 
     struct EmbeddingsQuery: Codable {
@@ -180,6 +270,7 @@ internal extension OpenAI {
 
 internal extension URL {
 
+    static let chat = URL(string: "https://api.openai.com/v1/chat/completions")!
     static let completions = URL(string: "https://api.openai.com/v1/completions")!
     static let images = URL(string: "https://api.openai.com/v1/images/generations")!
     static let embeddings = URL(string: "https://api.openai.com/v1/embeddings")!
